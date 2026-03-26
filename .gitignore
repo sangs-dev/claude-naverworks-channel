@@ -5,9 +5,3 @@ node_modules/
 token.json
 access.json
 mcp-local.json
-/scripts/browser-server.ts
-/scripts/console-action.ts
-/scripts/copy-secret.ts
-/scripts/find-buttons.js
-/scripts/get-secret.js
-/scripts/setup-bot.ts

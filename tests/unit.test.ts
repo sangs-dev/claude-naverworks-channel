@@ -1,5 +1,5 @@
 /**
- * Unit tests for bot-server core logic.
+ * Unit tests for channel server core logic.
  * Tests pure functions without external dependencies.
  */
 
@@ -237,72 +237,6 @@ describe('ENV Loading', () => {
     writeFileSync(f, 'URL=https://example.com?a=1&b=2\n')
     const env = loadEnv(f)
     expect(env.URL).toBe('https://example.com?a=1&b=2')
-  })
-})
-
-// ─── Conversation History ─────────────────────────────────────────
-
-function getHistoryFile(historyDir: string, userId: string): string {
-  return join(historyDir, `${userId.replace(/[^a-zA-Z0-9_-]/g, '_')}.jsonl`)
-}
-
-function appendHistory(historyDir: string, userId: string, role: 'user' | 'assistant', text: string): void {
-  mkdirSync(historyDir, { recursive: true })
-  const entry = JSON.stringify({ role, content: text, ts: Date.now() })
-  const { appendFileSync } = require('node:fs')
-  appendFileSync(getHistoryFile(historyDir, userId), entry + '\n')
-}
-
-function getRecentHistory(historyDir: string, userId: string, maxMessages = 20): Array<{ role: string; content: string }> {
-  const file = getHistoryFile(historyDir, userId)
-  if (!existsSync(file)) return []
-  const lines = readFileSync(file, 'utf-8').trim().split('\n').filter(Boolean)
-  const recent = lines.slice(-maxMessages)
-  return recent.map(l => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean)
-}
-
-describe('Conversation History', () => {
-  test('returns empty for new user', () => {
-    const histDir = join(TEST_DIR, 'history')
-    expect(getRecentHistory(histDir, 'user1')).toEqual([])
-  })
-
-  test('appends and reads history', () => {
-    const histDir = join(TEST_DIR, 'history')
-    appendHistory(histDir, 'user1', 'user', 'hello')
-    appendHistory(histDir, 'user1', 'assistant', 'hi there')
-
-    const history = getRecentHistory(histDir, 'user1')
-    expect(history).toHaveLength(2)
-    expect(history[0].role).toBe('user')
-    expect(history[0].content).toBe('hello')
-    expect(history[1].role).toBe('assistant')
-  })
-
-  test('limits to maxMessages', () => {
-    const histDir = join(TEST_DIR, 'history')
-    for (let i = 0; i < 30; i++) {
-      appendHistory(histDir, 'user2', 'user', `msg ${i}`)
-    }
-    const history = getRecentHistory(histDir, 'user2', 5)
-    expect(history).toHaveLength(5)
-    expect(history[0].content).toBe('msg 25')
-  })
-
-  test('sanitizes userId in filename', () => {
-    const histDir = join(TEST_DIR, 'history')
-    const file = getHistoryFile(histDir, 'user@domain.com')
-    expect(file).toContain('user_domain_com')
-  })
-
-  test('isolates history per user', () => {
-    const histDir = join(TEST_DIR, 'history')
-    appendHistory(histDir, 'userA', 'user', 'from A')
-    appendHistory(histDir, 'userB', 'user', 'from B')
-
-    expect(getRecentHistory(histDir, 'userA')).toHaveLength(1)
-    expect(getRecentHistory(histDir, 'userB')).toHaveLength(1)
-    expect(getRecentHistory(histDir, 'userA')[0].content).toBe('from A')
   })
 })
 
