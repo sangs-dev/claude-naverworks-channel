@@ -1,0 +1,3 @@
+bot.twomos.com {
+    reverse_proxy localhost:48080
+}
